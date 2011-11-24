@@ -11,6 +11,6 @@ dist
 downloads
 eggs
 parts
-ROOT/*.egg-info
+*.egg-info
 build
 *.bdb
