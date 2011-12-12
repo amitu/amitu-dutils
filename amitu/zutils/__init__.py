@@ -23,8 +23,9 @@ class NoReply(Exception): pass
 
 # ZPublisher # {{{
 class ZPublisher(threading.Thread):
-    def __init__(self, bind):
+    def __init__(self, bind, ctx=CONTEXT):
         super(ZPublisher, self).__init__()
+        self.ctx = ctx
         self.daemon = True
         self.bind = bind
         self.q = Queue.Queue()
@@ -33,7 +34,7 @@ class ZPublisher(threading.Thread):
     def publish(self, msg): self.q.put(msg)
     def shutdown(self): self.publish("ZPublisher.Shutdown")
     def run(self):
-        self.socket = CONTEXT.socket(zmq.PUB)
+        self.socket = self.ctx.socket(zmq.PUB)
         self.socket.bind(self.bind)
         while True:
             msg = self.q.get()
@@ -46,8 +47,9 @@ class ZPublisher(threading.Thread):
 
 # ZSubscriber # {{{
 class ZSubscriber(threading.Thread):
-    def __init__(self, bind, glob="", start=True):
+    def __init__(self, bind, glob="", start=True, ctx=CONTEXT):
         super(ZSubscriber, self).__init__()
+        self.ctx = ctx
         self.daemon = True
         self.bind = bind
         self.glob = glob
@@ -56,7 +58,7 @@ class ZSubscriber(threading.Thread):
     def process(self, msg): print msg
 
     def run(self):
-        self.socket = CONTEXT.socket(zmq.SUB)
+        self.socket = self.ctx.socket(zmq.SUB)
         if type(self.bind) == list:
             for bind in self.bind:
                 self.socket.connect(bind)
@@ -74,9 +76,10 @@ class ZSubscriber(threading.Thread):
 # ZReplier # {{{
 class ZReplier(threading.Thread):
 
-        def __init__(self, bind):
+        def __init__(self, bind, ctx=CONTEXT):
             super(ZReplier, self).__init__()
             self.shutdown_event = threading.Event()
+            self.ctx = ctx
             self.daemon = True
             self.bind = bind
             self.stats = {}
@@ -86,7 +89,7 @@ class ZReplier(threading.Thread):
             print "[%s] %s" % (time.asctime(), message)
 
         def thread_init(self):
-            self.socket = CONTEXT.socket(zmq.XREP)
+            self.socket = self.ctx.socket(zmq.XREP)
             try:
                 self.socket.bind(self.bind)
             except zmq.ZMQError, e:
@@ -104,10 +107,9 @@ class ZReplier(threading.Thread):
                 self.increment_stats_counter("shutdown")
                 return "shutting down"
             if message == "stats":
-                from django.utils import simplejson
                 self.log("stats")
                 self.increment_stats_counter("stats")
-                return simplejson.dumps(self.stats)
+                return json.dumps(self.stats)
             self.increment_stats_counter("no_reply")
             raise NoReply
 
@@ -152,7 +154,7 @@ class ZReplier(threading.Thread):
             self.thread_quit()
 
         def shutdown(self):
-            socket = CONTEXT.socket(zmq.REQ)
+            socket = self.ctx.socket(zmq.REQ)
             socket.connect(self.bind)
 
             socket.send("shutdown")
@@ -193,10 +195,10 @@ assert process_command('{"d": 20}') == { "d": 20 }
 assert process_command('result:{"r": "dodo"}') == ["result", { "r": "dodo" }]
 assert process_command('result:r2:{"r": "dodo"}') == ["result", "r2", { "r": "dodo" }]
 
-def query_maker(socket=None, bind=None):
+def query_maker(socket=None, bind=None, ctx=CONTEXT):
     if not socket:
         assert bind
-        socket = CONTEXT.socket(zmq.REQ)
+        socket = ctx.socket(zmq.REQ)
         #socket = CONTEXT.socket(zmq.XREQ)
         socket.connect(bind)
 
