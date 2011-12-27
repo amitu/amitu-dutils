@@ -1,1 +1,1 @@
-docs: http://packages.python.org/amitu-zutils/
+docs: http://packages.python.org/amitu-dutils/ (coming soon)
