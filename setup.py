@@ -13,7 +13,7 @@ setup(
     namespace_packages = ["amitu"],
     packages = find_packages(),
 
-    requires = ["werkzeug"],
+    install_requires = ["werkzeug"],
 
     entry_points={
         'console_scripts': [
