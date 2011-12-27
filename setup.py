@@ -14,6 +14,7 @@ setup(
     packages = find_packages(),
 
     install_requires = ["werkzeug"],
+    zip_safe = True,
 
     entry_points={
         'console_scripts': [

@@ -20,7 +20,7 @@ def runserver(ip, port, settings_module=None, debug=False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Serve a django project with cherrypy's wsgiserver"
+        description="Serve a django project with werkzeug's wsgiserver"
     )
     parser.add_argument("--ip", default="127.0.0.1")
     parser.add_argument("--port", default=8001, type=int)
@@ -30,13 +30,10 @@ def main():
 
     args = parser.parse_args()
 
-    if args.project:
-        runserver(
-            args.ip, args.port, debug=args.debug,
-            settings_module="%s.%s" % (args.project, args.setting)
-        )
-    else:
-        runserver(args.ip, args.port, args.setting, args.debug)
+    settings_module = args.setting
+    if args.project: settings_module = "%s.%s" % (args.project, args.setting)
+
+    runserver(args.ip, args.port, settings_module, args.debug)
 
 if __name__ == "__main__":
     main()
