@@ -31,9 +31,12 @@ def main():
     args = parser.parse_args()
 
     if args.project:
-        runserver(args.ip, args.port, "%s.%s" % (args.project, args.setting))
+        runserver(
+            args.ip, args.port, debug=args.debug,
+            settings_module="%s.%s" % (args.project, args.setting)
+        )
     else:
-        runserver(args.ip, args.port, args.setting)
+        runserver(args.ip, args.port, args.setting, args.debug)
 
 if __name__ == "__main__":
     main()
